@@ -1,0 +1,27 @@
+{
+  "name": "pjm",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "clean": "rimraf \"+src/**/*+(.d.ts|.js|.map)\"",
+    "prebuild": "npm run clean && eslint . --ext .ts",
+    "build": "tsc -p ."
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/glob": "^7.1.3",
+    "@typescript-eslint/eslint-plugin": "3.7.1",
+    "@typescript-eslint/parser": "3.7.1",
+    "eslint": "7.5.0",
+    "eslint-config-prettier": "6.11.0",
+    "eslint-plugin-prettier": "3.1.4",
+    "prettier": "2.0.5",
+    "rimraf": "3.0.2",
+    "typescript": "3.9.7"
+  },
+  "dependencies": {
+    "glob": "^7.1.6",
+    "winston": "^3.3.3"
+  }
+}
