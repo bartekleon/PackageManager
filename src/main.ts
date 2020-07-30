@@ -53,11 +53,11 @@ const checkDependencies = (
       if (config.overwrite && config.overwrite[packagePath][type]) {
         final = (config.overwrite[packagePath][type] as any)[packageName];
       }
-      if (!deps[packageName].startsWith(final)) {
+      const starts = deps[packageName].startsWith('~') || deps[packageName].startsWith('^') ? deps[packageName][0] : '';
+      if (starts !== final) {
         const file = fs.readFileSync(packagePath, 'utf8');
         file.split(/\r?\n/).forEach((line, idx) => {
           if (line.includes(packageName) && line.includes(deps[packageName])) {
-            const starts = deps[packageName].startsWith('~') || deps[packageName].startsWith('^') ? deps[packageName][0] : '';
             logger.warn(
               `${path.resolve(packagePath)}: line ${
                 idx + 1
