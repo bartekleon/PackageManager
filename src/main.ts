@@ -1,15 +1,9 @@
 import { Config, Prefix, Maybe } from './config';
 import { glob } from 'glob';
-import * as winston from 'winston';
 import * as path from 'path';
 import * as fs from 'fs';
-
-const myFormat = winston.format.printf(({ message }) => message);
-
-const logger = winston.createLogger({
-  format: myFormat,
-  transports: [new winston.transports.Console(), new winston.transports.File({ filename: 'packageManager.log' })]
-});
+import { getVersionPrefix } from './util';
+import { logger } from './logger';
 
 const defaultConfig: Config = {
   defaultPrefix: Prefix.Minor
@@ -30,22 +24,12 @@ const checkDependencies = (
     let c: Maybe<Prefix>;
     if (overwrite) {
       const d = overwrite[packagePath][type];
-      if (d) {
-        c = d.defaultPrefix;
-      }
-      if (c === undefined) {
-        c = overwrite[packagePath].defaultPrefix;
-      }
+      c = (d && d.defaultPrefix) ?? overwrite[packagePath].defaultPrefix;
     }
 
     if (c === undefined) {
       const d = config[type];
-      if (d) {
-        c = d.defaultPrefix;
-      }
-      if (c === undefined) {
-        c = config.defaultPrefix;
-      }
+      c = (d && d.defaultPrefix) ?? config.defaultPrefix;
     }
 
     for (const packageName in deps) {
@@ -53,7 +37,7 @@ const checkDependencies = (
       if (config.overwrite && config.overwrite[packagePath][type]) {
         final = (config.overwrite[packagePath][type] as any)[packageName];
       }
-      const starts = deps[packageName].startsWith('~') || deps[packageName].startsWith('^') ? deps[packageName][0] : '';
+      const starts = getVersionPrefix(deps[packageName]);
       if (starts !== final) {
         const file = fs.readFileSync(packagePath, 'utf8');
         file.split(/\r?\n/).forEach((line, idx) => {
@@ -71,9 +55,7 @@ const checkDependencies = (
 };
 
 const checkPackage = (packagePath: string, config: Config) => {
-  const normalized = path.resolve(packagePath);
-
-  import(normalized).then((json: Record<string, unknown>) => {
+  import(path.resolve(packagePath)).then((json: Record<string, unknown>) => {
     const { devDependencies, dependencies, peerDependencies } = json;
     checkDependencies(devDependencies, 'devDependencies', config, packagePath);
     checkDependencies(dependencies, 'dependencies', config, packagePath);

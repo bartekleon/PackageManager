@@ -6,26 +6,8 @@ export const enum Prefix {
   Current = ''
 }
 
-export interface Config {
+interface FolderConfig {
   defaultPrefix: Prefix;
-  excludePaths?: string[];
-  overwrite?: {
-    [path: string]: {
-      defaultPrefix: Prefix;
-      dependencies?: {
-        defaultPrefix?: Prefix;
-        [dependency: string]: Maybe<Prefix>;
-      };
-      devDependencies?: {
-        defaultPrefix?: Prefix;
-        [dependency: string]: Maybe<Prefix>;
-      };
-      peerDependencies?: {
-        defaultPrefix?: Prefix;
-        [dependency: string]: Maybe<Prefix>;
-      };
-    };
-  };
   dependencies?: {
     defaultPrefix?: Prefix;
     [dependency: string]: Maybe<Prefix>;
@@ -37,5 +19,12 @@ export interface Config {
   peerDependencies?: {
     defaultPrefix?: Prefix;
     [dependency: string]: Maybe<Prefix>;
+  };
+}
+
+export interface Config extends FolderConfig {
+  excludePaths?: string[];
+  overwrite?: {
+    [path: string]: FolderConfig;
   };
 }
