@@ -1,7 +1,5 @@
 name: PackageManager Actions
 
-name: Dark Magician (Github Actions)
-
 on:
   - push
   - pull_request
