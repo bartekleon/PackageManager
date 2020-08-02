@@ -17,9 +17,3 @@ jobs:
       - uses: actions/checkout@v2
       - name: testing package manager
         run: npm i && npm run test
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: linting package manager
-        run: npm i && npm run lint --quiet
