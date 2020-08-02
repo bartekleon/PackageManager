@@ -8,6 +8,7 @@
     "clean": "rimraf \"+src/**/*+(.d.ts|.js|.map)\"",
     "test": "yarn pretest && nyc --reporter lcov ava",
     "prebuild": "npm run clean && eslint . --ext .ts",
+    "lint": "eslint src",
     "build": "tsc -p ."
   },
   "license": "MIT",
