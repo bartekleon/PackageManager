@@ -1,17 +1,10 @@
-import { Config, Prefix, Maybe } from './config';
+import { Config, Prefix, Maybe, defaultConfig } from './config';
 import { glob } from 'glob';
 import * as path from 'path';
 import * as fs from 'fs';
-import { getVersionPrefix } from './util';
+import { getVersionPrefix, isObject } from './util';
 import { logger } from './logger';
-
-const defaultConfig: Config = {
-  defaultPrefix: Prefix.Minor
-};
-
-const isObject = (check: unknown): check is { [packageName: string]: string } => {
-  return check !== undefined;
-};
+import { extractVersion, getVersion } from './getVersion';
 
 const checkDependencies = (
   deps: unknown,
@@ -24,12 +17,12 @@ const checkDependencies = (
     let c: Maybe<Prefix>;
     if (overwrite) {
       const d = overwrite[packagePath][type];
-      c = (d && d.defaultPrefix) ?? overwrite[packagePath].defaultPrefix;
+      c = (d && d.defaultPrefix !== undefined && d.defaultPrefix) || overwrite[packagePath].defaultPrefix;
     }
 
     if (c === undefined) {
       const d = config[type];
-      c = (d && d.defaultPrefix) ?? config.defaultPrefix;
+      c = (d && d.defaultPrefix !== undefined && d.defaultPrefix) || config.defaultPrefix;
     }
 
     for (const packageName in deps) {
@@ -40,13 +33,27 @@ const checkDependencies = (
       const starts = getVersionPrefix(deps[packageName]);
       if (starts !== final) {
         const file = fs.readFileSync(packagePath, 'utf8');
+        const currentVersion = deps[packageName];
         file.split(/\r?\n/).forEach((line, idx) => {
-          if (line.includes(packageName) && line.includes(deps[packageName])) {
-            logger.warn(
-              `${path.resolve(packagePath)}: line ${
-                idx + 1
-              }, Error - ${line.trim()} expected prefix "${final}", but got "${starts}"`
-            );
+          if (line.includes(packageName) && line.includes(currentVersion)) {
+            (async () => {
+              const version = config.checkVersions && (await getVersion(packageName, extractVersion(currentVersion)));
+              if (version) {
+                logger.warn(
+                  `${path.resolve(packagePath)}: line ${
+                    idx + 1
+                  }, Error - ${line.trim()} expected prefix "${final}", but got "${starts}". Consider ${
+                    currentVersion.includes(version) ? ', if possible, ' : ''
+                  } changing it to "${packageName}" : "${final}${version}"`
+                );
+              } else {
+                logger.warn(
+                  `${path.resolve(packagePath)}: line ${
+                    idx + 1
+                  }, Error - ${line.trim()} expected prefix "${final}", but got "${starts}".`
+                );
+              }
+            })();
           }
         });
       }

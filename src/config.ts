@@ -23,8 +23,13 @@ interface FolderConfig {
 }
 
 export interface Config extends FolderConfig {
+  checkVersions?: boolean;
   excludePaths?: string[];
   overwrite?: {
     [path: string]: FolderConfig;
   };
 }
+
+export const defaultConfig: Config = {
+  defaultPrefix: Prefix.Minor
+};
