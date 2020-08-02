@@ -9,17 +9,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: building dark magician
+      - name: building package manager
         run: npm i && npm run build
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: testing dark magician
+      - name: testing package manager
         run: npm i && npm run test
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: linting dark magician
+      - name: linting package manager
         run: npm i && npm run lint --quiet
