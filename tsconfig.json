@@ -18,5 +18,10 @@
       "dom",
       "esnext"
     ]
-  }
+  },
+  "include": [
+    "src",
+    "tests",
+    "index.d.ts"
+  ]
 }
