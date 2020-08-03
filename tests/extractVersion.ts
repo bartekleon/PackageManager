@@ -19,7 +19,3 @@ test('extract current ver', async (t) => {
 
   t.assert(currentDep, '1.0.0');
 });
-
-test.skip('extract invalid ver', async (t) => {
-  t.throws(() => extractVersion('$0.0'));
-});
