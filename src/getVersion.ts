@@ -7,11 +7,10 @@ export const getVersion = async (packageName: string, version?: string) => {
     version = `@${version}`;
   }
   try {
-    const latest = await fetch(`https://unpkg.com/${packageName}${version}/package.json`, { method: 'Get' }).then((res) =>
+    const latest = await fetch(`https://unpkg.com/${packageName}${version || ''}/package.json`, { method: 'Get' }).then((res) =>
       res.json()
     );
-    const v = latest.version;
-    return v;
+    return latest.version;
   } catch (_) {
     return null;
   }

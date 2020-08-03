@@ -2,7 +2,7 @@ import test from 'ava';
 
 import { getVersion } from '../src/getVersion';
 
-test.failing('get latest package version', async (t) => {
+test('get latest package version', async (t) => {
   const version = await getVersion('steampe');
 
   t.assert(version, '2.1.7');
