@@ -9,17 +9,10 @@ import { extractVersion, getVersion } from './getVersion';
 export class PackageManager {
   private config: Config = defaultConfig;
 
-  private async loadConfig() {
-    try {
-      const conf = (await import(path.resolve('pmj.conf.json'))) || {};
-      this.config = Object.assign({}, this.config, conf);
-    } catch (_) {
-      // Config not found, procceed with default one
-    }
-  }
-
   public async run() {
-    this.loadConfig();
+    const configPath = path.resolve('pmj.conf.json');
+    const conf = fs.existsSync(configPath) ? await import(configPath) : {};
+    this.config = Object.assign({}, this.config, conf);
 
     glob(
       path.join(process.argv[2] || '.', '**', 'package.json'),
