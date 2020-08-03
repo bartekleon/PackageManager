@@ -6,91 +6,96 @@ import { getVersionPrefix, isObject } from './util';
 import { logger } from './logger';
 import { extractVersion, getVersion } from './getVersion';
 
-const checkDependencies = (
-  deps: unknown,
-  type: 'devDependencies' | 'dependencies' | 'peerDependencies',
-  config: Config,
-  packagePath: string
-) => {
-  if (isObject(deps)) {
-    const overwrite = config.overwrite;
-    let c: Maybe<Prefix>;
-    if (overwrite) {
-      const d = overwrite[packagePath][type];
-      c = (d && d.defaultPrefix !== undefined && d.defaultPrefix) || overwrite[packagePath].defaultPrefix;
-    }
+export class PackageManager {
+  private config: Config = defaultConfig;
 
-    if (c === undefined) {
-      const d = config[type];
-      c = (d && d.defaultPrefix !== undefined && d.defaultPrefix) || config.defaultPrefix;
+  private async loadConfig() {
+    try {
+      const conf = (await import(path.resolve('pmj.conf.json'))) || {};
+      this.config = Object.assign({}, this.config, conf);
+    } catch (_) {
+      // Config not found, procceed with default one
     }
+  }
 
-    for (const packageName in deps) {
-      let final = c;
-      if (config.overwrite && config.overwrite[packagePath][type]) {
-        final = (config.overwrite[packagePath][type] as any)[packageName];
+  public async run() {
+    this.loadConfig();
+
+    glob(
+      path.join(process.argv[2] || '.', '**', 'package.json'),
+      {
+        ignore: ['**/node_modules/**', ...(this.config.excludePaths || [])]
+      },
+      (err: Error | null, matches: string[]) => {
+        if (err) {
+          throw err;
+        }
+        matches.forEach(this.checkPackage);
       }
-      const starts = getVersionPrefix(deps[packageName]);
-      if (starts !== final) {
-        const file = fs.readFileSync(packagePath, 'utf8');
-        const currentVersion = deps[packageName];
-        file.split(/\r?\n/).forEach((line, idx) => {
-          if (line.includes(packageName) && line.includes(currentVersion)) {
-            (async () => {
-              const version = config.checkVersions && (await getVersion(packageName, extractVersion(currentVersion)));
-              if (version) {
-                logger.warn(
-                  `${path.resolve(packagePath)}: line ${
-                    idx + 1
-                  }, Error - ${line.trim()} expected prefix "${final}", but got "${starts}". Consider ${
-                    currentVersion.includes(version) ? ', if possible, ' : ''
-                  } changing it to "${packageName}" : "${final}${version}"`
-                );
-              } else {
-                logger.warn(
-                  `${path.resolve(packagePath)}: line ${
-                    idx + 1
-                  }, Error - ${line.trim()} expected prefix "${final}", but got "${starts}".`
-                );
+    );
+  }
+
+  private readonly checkPackage = (packagePath: string) => {
+    import(path.resolve(packagePath)).then((json: Record<string, unknown>) => {
+      const { devDependencies, dependencies, peerDependencies } = json;
+      this.checkDependencies(devDependencies, 'devDependencies', packagePath);
+      this.checkDependencies(dependencies, 'dependencies', packagePath);
+      this.checkDependencies(peerDependencies, 'peerDependencies', packagePath);
+    });
+  };
+
+  private readonly checkDependencies = (
+    deps: unknown,
+    type: 'devDependencies' | 'dependencies' | 'peerDependencies',
+    packagePath: string
+  ) => {
+    if (isObject(deps)) {
+      const overwrite = this.config.overwrite;
+      let c: Maybe<Prefix>;
+      if (overwrite) {
+        const d = overwrite[packagePath][type];
+        c = (d && d.defaultPrefix !== undefined && d.defaultPrefix) || overwrite[packagePath].defaultPrefix;
+      }
+
+      if (c === undefined) {
+        const d = this.config[type];
+        c = (d && d.defaultPrefix !== undefined && d.defaultPrefix) || this.config.defaultPrefix;
+      }
+
+      for (const packageName in deps) {
+        let final = c;
+        if (overwrite && overwrite[packagePath][type]) {
+          final = (overwrite[packagePath][type] as any)[packageName];
+        }
+        const starts = getVersionPrefix(deps[packageName]);
+        if (starts !== final) {
+          const currentVersion = deps[packageName];
+          fs.readFileSync(packagePath, 'utf8')
+            .split(/\r?\n/)
+            .forEach((line, idx) => {
+              if (line.includes(packageName) && line.includes(currentVersion)) {
+                (async () => {
+                  const version = this.config.checkVersions && (await getVersion(packageName, extractVersion(currentVersion)));
+                  logger.warn(
+                    `${path.resolve(packagePath)}: line ${
+                      idx + 1
+                    }, Error - ${line.trim()} expected prefix "${final}", but got "${starts}". ${
+                      version
+                        ? `Consider ${
+                            currentVersion.includes(version) ? ', if possible, ' : ''
+                          } changing it to "${packageName}" : "${final}${version}"`
+                        : ''
+                    }`
+                  );
+                })();
               }
-            })();
-          }
-        });
+            });
+        }
       }
     }
-  }
-};
+  };
+}
 
-const checkPackage = (packagePath: string, config: Config) => {
-  import(path.resolve(packagePath)).then((json: Record<string, unknown>) => {
-    const { devDependencies, dependencies, peerDependencies } = json;
-    checkDependencies(devDependencies, 'devDependencies', config, packagePath);
-    checkDependencies(dependencies, 'dependencies', config, packagePath);
-    checkDependencies(peerDependencies, 'peerDependencies', config, packagePath);
-  });
-};
+const Run = new PackageManager().run;
 
-export const Run = async () => {
-  let conf = {};
-  try {
-    conf = await import(path.resolve('pmj.conf.json'));
-  } catch (_) {
-    // Config not found, procceed with default one
-  }
-  const config = Object.assign({}, defaultConfig, conf);
-
-  glob(
-    path.join(process.argv[2] || '.', '**', 'package.json'),
-    {
-      ignore: ['**/node_modules/**', ...(config.excludePaths || [])]
-    },
-    (err: Error | null, matches: string[]) => {
-      if (err) {
-        throw err;
-      }
-      matches.forEach((packagePath) => checkPackage(packagePath, config));
-    }
-  );
-};
-
-Run();
+export { Run };
