@@ -8,6 +8,7 @@
     "declaration": true,
     "forceConsistentCasingInFileNames": true,
     "allowJs": false,
+    "baseUrl": ".",
     "importHelpers": true,
     "noFallthroughCasesInSwitch": false,
     "noImplicitReturns": true,
@@ -20,8 +21,6 @@
     ]
   },
   "include": [
-    "src",
-    "tests",
-    "index.d.ts"
+    "src"
   ]
 }

@@ -16,4 +16,4 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: testing package manager
-        run: npm i && npm run test
+        run: npm i && npm test
