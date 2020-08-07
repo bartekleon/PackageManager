@@ -2,6 +2,7 @@
   "name": "pjm",
   "version": "1.0.0",
   "description": "",
+  "author": "kmdrGroch",
   "main": "src/main.js",
   "bin": {
     "@kmdrGroch/pmj": "bin/pmj",
