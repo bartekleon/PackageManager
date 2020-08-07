@@ -9,13 +9,15 @@ import { extractVersion, getVersion } from './getVersion';
 export class PackageManager {
   private config: Config = defaultConfig;
 
+  constructor(private readonly argv?: string[]) {}
+
   public async run() {
     const configPath = path.resolve('pmj.conf.json');
     const conf = fs.existsSync(configPath) ? await import(configPath) : {};
     this.config = Object.assign({}, this.config, conf);
 
     glob(
-      path.join(process.argv[2] || '.', '**', 'package.json'),
+      path.join((this.argv && this.argv[2]) || '.', '**', 'package.json'),
       {
         ignore: ['**/node_modules/**', ...(this.config.excludePaths || [])]
       },
@@ -59,6 +61,8 @@ export class PackageManager {
         let final = c;
         if (overwrite && overwrite[packagePath][type]) {
           final = (overwrite[packagePath][type] as any)[packageName];
+        } else if (this.config[type] && (this.config[type] as any)[packageName]) {
+          final = (this.config[type] as any)[packageName];
         }
         const starts = getVersionPrefix(deps[packageName]);
         if (starts !== final) {

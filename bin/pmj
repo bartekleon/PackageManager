@@ -1,0 +1,8 @@
+#!/usr/bin/env node
+
+'use strict';
+
+process.title = 'pmj';
+
+const { PackageManager } = require('../src/main');
+new PackageManager(process.argv).run();

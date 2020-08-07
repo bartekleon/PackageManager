@@ -2,12 +2,20 @@
   "name": "pjm",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/main.js",
+  "bin": {
+    "@kmdrGroch/pmj": "bin/pmj",
+    "pmj": "bin/pmj"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "clean": "rimraf \"+(src|tests)/**/*+(.d.ts|.js|.map)\"",
     "prebuild": "npm run clean && eslint src --ext .ts",
     "build": "tsc",
-    "test": "nyc --reporter=html ava"
+    "test": "nyc --reporter=html ava",
+    "prepublish": "npm run build"
   },
   "license": "MIT",
   "devDependencies": {
